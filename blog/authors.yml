@@ -1,7 +1,7 @@
 jobyjoseph:
   name: Joby Joseph
   url: https://github.com/jobyjoseph
-  image_url: https://github.com/jobyjoseph.png
+  image_url: /img/avatar.png
   page: true
   socials:
     github: jobyjoseph
