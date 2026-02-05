@@ -22,34 +22,58 @@ type BlogListPageProps = {
 
 export default function BlogListPage(props: BlogListPageProps) {
   const { metadata, items } = props;
+  const groupedByYear = items.reduce<
+    Record<string, BlogListPageProps["items"][0]["content"]["metadata"][]>
+  >((acc, { content }) => {
+    const { metadata: post } = content;
+    const year = new Date(post.date).getFullYear().toString();
+    if (!acc[year]) {
+      acc[year] = [];
+    }
+    acc[year].push(post);
+    return acc;
+  }, {});
+  const years = Object.keys(groupedByYear).sort(
+    (a, b) => Number(b) - Number(a),
+  );
 
   return (
     <Layout title={metadata.blogTitle} description={metadata.blogDescription}>
       <main className="container margin-vert--lg">
         <header className={styles.header}>
-          <h1 className={styles.title}>{metadata.blogTitle}</h1>
+          <h1 className={styles.title}>Posts</h1>
         </header>
-        <ul className={styles.list}>
-          {items.map(({ content }) => {
-            const { metadata: post } = content;
-            const dateLabel =
-              post.formattedDate ??
-              new Date(post.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "2-digit",
-              });
+        <div className={styles.groupList}>
+          {years.map((year) => (
+            <section key={year} className={styles.yearGroup}>
+              <div className={styles.yearHeader}>
+                <h2 className={styles.yearTitle}>{year}</h2>
+                <span className={styles.yearCount}>
+                  {groupedByYear[year].length} posts
+                </span>
+              </div>
+              <ul className={styles.yearList}>
+                {groupedByYear[year].map((post) => {
+                  const dateLabel =
+                    post.formattedDate ??
+                    new Date(post.date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "2-digit",
+                    });
 
-            return (
-              <li key={post.permalink} className={styles.item}>
-                <Link className={styles.link} to={post.permalink}>
-                  {post.title}
-                </Link>
-                <span className={styles.date}>{dateLabel}</span>
-              </li>
-            );
-          })}
-        </ul>
+                  return (
+                    <li key={post.permalink} className={styles.item}>
+                      <Link className={styles.link} to={post.permalink}>
+                        {post.title}
+                      </Link>
+                      <span className={styles.date}>{dateLabel}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       </main>
     </Layout>
   );
