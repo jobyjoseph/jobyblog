@@ -28,3 +28,20 @@
   --ifm-color-primary-lightest: #c3caff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+.avatar__name {
+  font-weight: normal;
+  margin-bottom: 5px;
+}
+
+.avatar__name span {
+  font-size: .9rem;
+}
+
+.avatar__intro {
+  justify-content: center;
+}
+
+.avatar__photo {
+  border: 1px solid #ddd;
+}
