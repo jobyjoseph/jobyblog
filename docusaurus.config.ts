@@ -82,9 +82,15 @@ const config: Config = {
         src: "img/avatar.png",
       },
       items: [
+        {
+          type: "docSidebar",
+          sidebarId: "headlessShopifySidebar",
+          position: "left",
+          label: "Headless Shopify",
+        },
         { to: "/blog", label: "Blog", position: "left" },
         {
-          href: "https://github.com/facebook/docusaurus",
+          href: "https://github.com/jobyjoseph/headless-shopify",
           label: "GitHub",
           position: "right",
         },
