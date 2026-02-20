@@ -6,7 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
   title: "Joby.blog",
-  tagline: "Dinosaurs are cool",
+  tagline: "Documenting my life",
   favicon: "img/avatar.png",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -64,6 +64,10 @@ const config: Config = {
         },
         theme: {
           customCss: "./src/css/custom.css",
+        },
+        gtag: {
+          trackingID: "G-LQ5SPV0V6J",
+          anonymizeIP: true,
         },
       } satisfies Preset.Options,
     ],
