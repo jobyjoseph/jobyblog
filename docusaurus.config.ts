@@ -69,6 +69,12 @@ const config: Config = {
           trackingID: "G-LQ5SPV0V6J",
           anonymizeIP: true,
         },
+        sitemap: {
+          changefreq: "weekly",
+          priority: 0.5,
+          ignorePatterns: ["/tags/**"],
+          filename: "sitemap.xml",
+        },
       } satisfies Preset.Options,
     ],
   ],
