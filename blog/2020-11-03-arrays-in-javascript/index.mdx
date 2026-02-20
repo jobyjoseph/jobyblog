@@ -23,7 +23,7 @@ Arrays in JavaScript represent a **list of values**. The values can be **any val
 - [Array() Function](#array-function)
 - [Array Instance Methods](#array-instance-methods)
 
-## Array Literal<a name="array-literal" />
+## Array Literal
 
 Array Literal is a list of zero or more expressions, each of which represents an array element, wrapped in square brackets(`[]`).
 
@@ -65,7 +65,7 @@ What is the length of following array?
 >
 > Here the array evaluates to `[undefined, undefined, undefined]`.
 
-## Array Declaration <a name="array-declaration" />
+## Array Declaration
 
 There are multiple ways in which we can declare an array in JavaScript.
 
@@ -168,7 +168,7 @@ console.log(Array(3)); //[undefined, undefined, undefined]
 console.log(Array.of(3)); // [3]
 ```
 
-## Read Array Elements <a name="read-array-elements" />
+## Read Array Elements
 
 All elements in an array is stored as a list of items with numeric indices. The index starts from **0**. An element of the array can be read by passing the index of the element.
 
@@ -195,7 +195,7 @@ const arr = ["Mercedes", "BMW", "Audi"];
 console.log(arr["1"]); // "BMW"
 ```
 
-## Set Array Elements <a name="set-array-elements" />
+## Set Array Elements
 
 Array elements can be set by initializing at the time of declaration itself. The square bracket(`[]`) syntax or `Array()` syntax can be used for that.
 
@@ -225,7 +225,7 @@ arr[5] = "Sixth";
 console.log(arr.length); // 6
 ```
 
-## Memory Allocation <a name="memory-allocation" />
+## Memory Allocation
 
 Normally in a programming language, arrays allocate a contigous block of memory with fixed length. But in JavaScript, arrays are **just Object types** with special constructor and methods. So internally, JavaScript engine cannot go with contigous memory approach for arrays. It treats an array like an object(hash) internally.
 
@@ -280,7 +280,7 @@ What if we try to print the value of `arr[3]`? It prints `undefined`. That is no
 
 In the above code snippet, when we assign a value to index 5, JavaScript automatically sets the value of `arr.length` to 6. That means, JavaScript always sets the `length` property value greater than the largest index value of the array.
 
-## Array() Function <a name="array-function" />
+## Array() Function
 
 `Array()` is a function in JavaScript. It is a built-in function, that means the definition of the function is already written inside JavaScript engine.
 
@@ -462,7 +462,7 @@ If the third argument is not there, `this` will have value of global object.Arro
 
 As discussed earlier, `Array.of()` creates and returns a new array from the arguments passed to the method.
 
-## Array Instance Methods <a name="array-instance-methods" />
+## Array Instance Methods
 
 The `Array()` constructor function has got a property called `prototype`. `Array.prototype` stores an object value. Any method of this `prototype` object is inherited by all instances of `Array()`. Example, if `Array.prototype` has a method called `boom()`, then `[2, 4, 7].boom()` is a valid method call.
 

@@ -13,8 +13,8 @@ The values on which the operator acts upon are called **operands**. Example, in 
 
 ### Contents
 
-- [Binary and Unary Operators](#binary-unary-operators)
-- [Optional Chaining](#optional-chaining)
+- [Binary and Unary Operators](#binary-and-unary-operators)
+- [Optional Chaining](#optional-chaining-es11)
 - [typeof](#typeof)
 
 ## Arithmetic Operators
@@ -27,7 +27,7 @@ Arithmetic operators perform arithmetic or numerical manipulations on the operan
 4. Addition - `+`
 5. Subtraction - `-`
 
-## Binary and Unary Operators <a name="binary-unary-operators" />
+## Binary and Unary Operators
 
 In case of adding two numbers, the `+` operator requires two operands. Then only it can work. Such operators are called **Binary** operators.
 
@@ -41,7 +41,7 @@ Such operators are called **Unary** operators.
 
 Binary and Unary are a way to classify all operators in JavaScript based on the number of operands required. Operators can also be grouped based on the operations they perform. Example: Conditional operators check if a particular condition is satisfied or not. Arithmetic operators perform mathematical calculations.
 
-## Optional Chaining(`?.`) (ES11) <a name="optional-chaining" />
+## Optional Chaining(`?.`) (ES11)
 
 Optional Chaining operator(`?.`) helps to safely read the value of a deeply nested object property. It returns `undefined`, if anyone of the nested object is nullish(`null` or `undefined`).
 
@@ -240,7 +240,7 @@ console.log(b); // undefined
 
 Since `a` is `undefined` in above code, the expression `b = 2` will not be evaluated. Otherwise, the value of `b` will be set to `2`.
 
-## typeof <a name="typeof" />
+## typeof
 
 `typeof` is an unary operator in JavaScript. It returns the type of the operand supplied to it.
 

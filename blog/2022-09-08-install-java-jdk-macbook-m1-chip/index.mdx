@@ -1,0 +1,40 @@
+---
+title: Install Java JDK in Macbook with M1 Chip
+date: 2022-09-08
+slug: install-java-jdk-macbook-m1-chip
+description: We can install Java Development Kit(JDK) in M1 Macbook using Amazon Corretto
+tags: [java]
+authors: jobyjoseph
+---
+
+In order to compile and run Java programs we need Java Development Kit(JDK). Mine is a Macbook with M1 chip. Here is how I installed JDK.
+
+<!-- truncate -->
+
+## Amazon Corretto
+
+Amazon Corretto is a no-cost, multiplatform, production-ready distribution of the Open Java Development Kit (OpenJDK).
+
+First step is to download the package from [Amazon Corretto Downloads](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html) page.
+
+From the page, we need to download the package under **macOS aarch64**.
+
+## Installation
+
+Open the `.pkg` file. It will open an installer.
+
+![Corretto Installer](./images/corretto-installer.png)
+
+Follow the instructions to complete the installation.
+
+## Verification
+
+After successful installation, we can take the terminal and try:
+
+```
+java --version
+```
+
+Above command displays the installed Java version.
+
+![Java Version](./images/java-version.png)
