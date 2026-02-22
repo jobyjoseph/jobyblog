@@ -1,0 +1,24 @@
+---
+title: How to Clear Cloudfront Cache in AWS
+date: 2022-11-26
+slug: how-to-clear-cloudfront-cache-aws
+description: Here are the steps to clear Cloudfront cache in AWS
+tags: [aws]
+authors: jobyjoseph
+---
+
+First, Click on the Cloudfront ID for which you want to clear the cache.
+
+![Cloudfront Ids](./images/cloudfront-ids.png)
+
+<!-- truncate -->
+
+In the Cloudfront Id details page, click on **Invalidations** tab. There you can see all invalidations done so far. Invalidations means clearing cache.
+
+![All invalidations](./images/invalidations.png)
+
+In order to clear cache, click on "Create Invalidation" button.
+
+![Create Invalidation](./images/create-invalidation.png)
+
+In the textarea, you can provide the url patterns to clear the full cache or a portion of cache. When you click on the orange _Create Invalidation_ button, you can see a loader loading for some time and then show _Complete_. At that time you can ensure that the cache is cleared.

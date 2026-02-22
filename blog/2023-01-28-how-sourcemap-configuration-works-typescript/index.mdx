@@ -1,0 +1,31 @@
+---
+title: How Sourcemap Configuration Works in TypeScript
+date: 2023-01-28
+slug: how-sourcemap-configuration-works-typescript
+description: When tsconfig.json file is generated, it contains a commented line for sourcemap. In order to enable source maps in a TypeScript project, we need to uncomment the line.
+tags: [typescript]
+authors: jobyjoseph
+---
+
+When `tsconfig.json` file is generated, it contains a commented line for sourcemap. In order to enable source maps in a TypeScript project, we need to uncomment the line.
+
+```json
+{
+  "compilerOptions": {
+    //...
+    "sourceMap": true
+  }
+}
+```
+
+<!-- truncate -->
+
+After enabling `sourceMap`, when we run `tsc` command, along with `.js` file, we can also see `.js.map` file generated.
+
+![JS Map](./images/js-map.png)
+
+This map file brings the original TypeScript file in the browser `sources` tab. It helps us to debug easily by directly viewing the TypeScript files.
+
+![TS file in Sources tab](./images/sources-tab-ts-file.png)
+
+We can also place breakpoints in the TypeScript files.
