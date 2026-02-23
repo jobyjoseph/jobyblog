@@ -8,105 +8,57 @@ import styles from "./index.module.css";
 
 const recentPosts = [
   {
-    title: "How To Write a File to AWS S3 Using Pure Node.js",
-    to: "/blog/how-to-write-file-aws-s3-using-pure-nodejs",
-    date: "Jan 29, 2024",
-  },
-  {
     title:
       "SOLVED: ReferenceError: Request is not defined When Running Next.js",
     to: "/blog/solved-reference-error-request-not-defined-nextjs",
     date: "Jan 30, 2024",
   },
   {
-    title: "useEffect() React Hook",
-    to: "/blog/useeffect-react-hook",
-    date: "Apr 10, 2022",
+    title: "How To Write a File to AWS S3 Using Pure Node.js",
+    to: "/blog/how-to-write-file-aws-s3-using-pure-nodejs",
+    date: "Jan 29, 2024",
   },
   {
-    title: "useState() React Hook",
-    to: "/blog/usestate-react-hook",
-    date: "Apr 07, 2022",
+    title: "How To Trigger Gitlab Pipeline Using API",
+    to: "/blog/how-to-trigger-gitlab-pipeline-using-api",
+    date: "Sep 21, 2023",
   },
   {
-    title: "How To Use ESLint With Prettier And React",
-    to: "/blog/how-to-use-eslint-with-prettier-and-react",
-    date: "Apr 01, 2022",
+    title: "Delete Old Lambda Versions Using Serverless Package",
+    to: "/blog/delete-old-lambda-versions-using-serverless-package",
+    date: "Sep 18, 2023",
   },
   {
-    title: "How To Use Prettier In React Project",
-    to: "/blog/how-to-use-prettier-in-react-project",
-    date: "Mar 31, 2022",
+    title: "Get Latest and Oldest AWS Lambda Version Numbers Using CLI",
+    to: "/blog/get-latest-and-oldest-aws-lambda-version-numbers-using-cli",
+    date: "Sep 16, 2023",
   },
   {
-    title: "Insert More Than One Child Component Using React.createElement()",
-    to: "/blog/insert-more-than-one-child-component-react-createelement",
-    date: "Mar 28, 2022",
+    title: "SOLVED: Gitlab Downstream Project Could Not be Found",
+    to: "/blog/solved-gitlab-downstream-project-could-not-be-found",
+    date: "Sep 06, 2023",
   },
   {
-    title: "How To Easily Write HTML5 Boilerplate Code In Visual Studio Code",
-    to: "/blog/html-boilerplate-code-visual-studio-code",
-    date: "Mar 27, 2022",
+    title: "SOLVED: 431 Status Code With Request Header Fields Too Large",
+    to: "/blog/solved-431-status-code-with-request-header-fields-too-large",
+    date: "Jul 08, 2023",
   },
   {
-    title: "How To Clear Browser Cache When Webpack Bundle Is Updated",
-    to: "/blog/clear-browser-cache-when-webpack-bundle-updated",
-    date: "Mar 23, 2022",
+    title:
+      "SOLVED: AWS Lambda CodeStorageExceededException: Code storage limit exceeded",
+    to: "/blog/solved-aws-lambda-codestorageexceededexception-code-storage-limit-exceeded",
+    date: "Jul 07, 2023",
   },
   {
-    title: "Code Splitting Using Webpack And Import Function",
-    to: "/blog/code-splitting-webpack-import-function",
-    date: "Mar 21, 2022",
+    title:
+      "Take Different Builds For Dev And Production Environment Using Webpack",
+    to: "/blog/take-different-builds-for-dev-and-production-environment-using-webpack",
+    date: "Mar 05, 2023",
   },
   {
-    title: "Hot Reloading Using Webpack Dev Server",
-    to: "/blog/hot-reloading-using-webpack-dev-server",
-    date: "Mar 19, 2022",
-  },
-  {
-    title: "Understanding Source Maps In Webpack",
-    to: "/blog/understanding-source-maps-in-webpack",
-    date: "Mar 16, 2022",
-  },
-  {
-    title: "Clean Distribution Folder In Each Webpack Build",
-    to: "/blog/clean-distribution-folder-in-each-webpack-build",
-    date: "Mar 15, 2022",
-  },
-  {
-    title: "Mode Option In Webpack Configuration",
-    to: "/blog/webpack-mode-config",
-    date: "Mar 12, 2022",
-  },
-  {
-    title: "Plugins In Webpack And HTML Webpack Plugin",
-    to: "/blog/webpack-plugins",
-    date: "Mar 11, 2022",
-  },
-  {
-    title: "Understanding Loaders In Webpack",
-    to: "/blog/webpack-loaders",
-    date: "Mar 09, 2022",
-  },
-  {
-    title: "Output Option In Webpack Configuration",
-    to: "/blog/webpack-output-config",
-    date: "Mar 08, 2022",
-  },
-  {
-    title: "Entry Option In Webpack Configuration",
-    to: "/blog/webpack-entry-config",
-    date: "Mar 07, 2022",
-  },
-  {
-    title: "Webpack Configuration File",
-    to: "/blog/webpack-config-file",
-    date: "Mar 06, 2022",
-  },
-  {
-    title: "Introduction to Webpack",
-    to: "/blog/webpack-introduction",
-    date: "Mar 05, 2022",
+    title: "Styled Components Resolution in Package.json File",
+    to: "/blog/styled-components-resolution-package-json-file",
+    date: "Mar 04, 2023",
   },
 ];
 
