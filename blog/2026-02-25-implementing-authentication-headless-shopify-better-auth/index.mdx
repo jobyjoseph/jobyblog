@@ -1,8 +1,8 @@
 ---
-title: "Implementing Authentication in Headless Shopify Using Better-Auth"
+title: "Authentication in Headless Shopify Using Better-Auth and Next.js"
 date: 2026-02-25
 slug: implementing-authentication-headless-shopify-better-auth
-description: "Learn how to implement secure authentication in your headless Shopify storefront using Better-Auth. Complete guide with custom plugin implementation, sign-in, sign-up, and session management."
+description: "Learn how to implement secure authentication in your headless Shopify storefront using Better-Auth and Next.js. Complete guide with custom plugin implementation, sign-in, sign-up, and session management."
 tags: ["shopify", "authentication", "nextjs", "web"]
 authors: jobyjoseph
 ---
@@ -35,6 +35,15 @@ When building a headless Shopify storefront, you need to integrate with Shopify'
 Our authentication implementation consists of several key components:
 
 ![Authentication Architecture](./block-diagram.png)
+
+## Prerequisites
+
+Before implementing authentication with Better-Auth, ensure you have:
+
+1. **Next.js Setup**: A working Next.js application (App Router or Pages Router)
+2. **Shopify Integration**: Logic to execute Shopify customer mutations (`customerAccessTokenCreate`, `customerCreate`, etc.) via Shopify's Storefront API
+
+This article focuses specifically on integrating Better-Auth with Shopify and does not cover Next.js setup or Shopify API integration basics.
 
 ## Step 1: Install Better-Auth
 
@@ -178,6 +187,7 @@ export const shopifyAuthPlugin = () => {
 ```
 
 The sign-in flow:
+
 1. Validates email and password using Zod
 2. Calls Shopify's `customerAccessTokenCreate` mutation
 3. Checks for errors in the response
@@ -225,7 +235,7 @@ signUp: createAuthEndpoint(
     if (autoSignIn) {
       const signInResult = await customerAccessTokenCreate({ email, password });
       const token = signInResult?.customerAccessTokenCreate?.customerAccessToken?.accessToken;
-      
+
       if (token) {
         ctx.setCookie(SHOPIFY_CUSTOMER_TOKEN_COOKIE, token, {
           httpOnly: true,
@@ -242,6 +252,7 @@ signUp: createAuthEndpoint(
 ```
 
 The sign-up flow:
+
 1. Validates all input fields using Zod
 2. Calls Shopify's `customerCreate` mutation
 3. Handles any errors from Shopify
@@ -276,6 +287,7 @@ export const { GET, POST } = toNextJsHandler(auth);
 ```
 
 This creates the following endpoints:
+
 - `POST /api/auth/shopify-auth/sign-in` - Sign in
 - `POST /api/auth/shopify-auth/sign-up` - Sign up
 
@@ -375,7 +387,8 @@ async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
 
   const form = e.currentTarget;
   const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-  const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+  const password = (form.elements.namedItem("password") as HTMLInputElement)
+    .value;
 
   try {
     const shopifyAuth = await authClient.shopifySignIn({
@@ -384,7 +397,8 @@ async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     });
 
     // Check for errors in the response
-    const shopifyError = (shopifyAuth as { error?: { message?: string } })?.error?.message;
+    const shopifyError = (shopifyAuth as { error?: { message?: string } })
+      ?.error?.message;
     if (shopifyError) {
       setError(shopifyError || "Invalid email or password.");
       return;
@@ -415,7 +429,7 @@ Create a simple, accessible form:
 return (
   <div className="max-w-md mx-auto mt-8 p-6">
     <h1 className="text-2xl font-bold mb-6">Sign In</h1>
-    
+
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <label htmlFor="email" className="block text-sm font-medium mb-2">
@@ -488,10 +502,13 @@ async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
   setLoading(true);
 
   const form = e.currentTarget;
-  const firstName = (form.elements.namedItem("firstName") as HTMLInputElement).value;
-  const lastName = (form.elements.namedItem("lastName") as HTMLInputElement).value;
+  const firstName = (form.elements.namedItem("firstName") as HTMLInputElement)
+    .value;
+  const lastName = (form.elements.namedItem("lastName") as HTMLInputElement)
+    .value;
   const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-  const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+  const password = (form.elements.namedItem("password") as HTMLInputElement)
+    .value;
 
   try {
     const shopifyAuth = await authClient.shopifySignUp({
@@ -504,7 +521,8 @@ async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     });
 
     // Check for errors
-    const shopifyError = (shopifyAuth as { error?: { message?: string } })?.error?.message;
+    const shopifyError = (shopifyAuth as { error?: { message?: string } })
+      ?.error?.message;
     if (shopifyError) {
       setError(shopifyError || "Unable to create account.");
       return;
@@ -537,7 +555,7 @@ Create a registration form with fields for first name, last name, email, and pas
 return (
   <div className="max-w-md mx-auto mt-8 p-6">
     <h1 className="text-2xl font-bold mb-6">Create Account</h1>
-    
+
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <label htmlFor="firstName" className="block text-sm font-medium mb-2">
@@ -615,7 +633,13 @@ A session provider manages user authentication state across your application usi
 // src/providers/session-provider.tsx
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { getCurrentUser } from "@/lib/shopify/queries/customers/getCurrentUser";
 
 type SessionUser = Awaited<ReturnType<typeof getCurrentUser>>;
@@ -631,7 +655,9 @@ type SessionContextValue = {
 ### Create the Provider Component
 
 ```tsx
-const SessionContext = createContext<SessionContextValue | undefined>(undefined);
+const SessionContext = createContext<SessionContextValue | undefined>(
+  undefined,
+);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SessionUser>(null);
@@ -690,13 +716,15 @@ Add the SessionProvider to your root layout:
 // src/app/layout.tsx
 import { SessionProvider } from "@/providers/session-provider";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
-        <SessionProvider>
-          {children}
-        </SessionProvider>
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );
@@ -729,6 +757,7 @@ export function UserProfile() {
 ```
 
 The session hook provides:
+
 - `user` - Current user data or null
 - `loading` - Boolean indicating if user data is being fetched
 - `error` - Error message if fetching failed
@@ -742,9 +771,9 @@ The access token is stored in an HTTP-only cookie, making it inaccessible to Jav
 
 ```typescript
 ctx.setCookie(SHOPIFY_CUSTOMER_TOKEN_COOKIE, token, {
-  httpOnly: true,  // Prevents XSS attacks
-  secure: process.env.NODE_ENV === "production",  // HTTPS only in production
-  sameSite: "lax",  // CSRF protection
+  httpOnly: true, // Prevents XSS attacks
+  secure: process.env.NODE_ENV === "production", // HTTPS only in production
+  sameSite: "lax", // CSRF protection
   path: "/",
   expires: expiresAt ? new Date(expiresAt) : undefined,
 });
