@@ -9,6 +9,17 @@ import styles from "./index.module.css";
 const recentPosts = [
   {
     title:
+      "Implementing Forgot Password and Reset Password in Headless Shopify",
+    to: "/blog/implementing-forgot-password-reset-password-headless-shopify",
+    date: "Feb 28, 2026",
+  },
+  {
+    title: "Authentication in Headless Shopify Using Better-Auth and Next.js",
+    to: "/blog/implementing-authentication-headless-shopify-better-auth",
+    date: "Feb 25, 2026",
+  },
+  {
+    title:
       "SOLVED: ReferenceError: Request is not defined When Running Next.js",
     to: "/blog/solved-reference-error-request-not-defined-nextjs",
     date: "Jan 30, 2024",
@@ -48,17 +59,6 @@ const recentPosts = [
       "SOLVED: AWS Lambda CodeStorageExceededException: Code storage limit exceeded",
     to: "/blog/solved-aws-lambda-codestorageexceededexception-code-storage-limit-exceeded",
     date: "Jul 07, 2023",
-  },
-  {
-    title:
-      "Take Different Builds For Dev And Production Environment Using Webpack",
-    to: "/blog/take-different-builds-for-dev-and-production-environment-using-webpack",
-    date: "Mar 05, 2023",
-  },
-  {
-    title: "Styled Components Resolution in Package.json File",
-    to: "/blog/styled-components-resolution-package-json-file",
-    date: "Mar 04, 2023",
   },
 ];
 
