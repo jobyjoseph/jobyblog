@@ -104,6 +104,12 @@ const config: Config = {
           label: "GitHub",
           position: "right",
         },
+        {
+          href: "mailto:reachjoby@gmail.com",
+          label: "Hire Me",
+          position: "right",
+          className: "hire-me-button",
+        },
       ],
     },
     footer: {
