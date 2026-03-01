@@ -106,7 +106,7 @@ const config: Config = {
           position: "right",
         },
         {
-          href: "mailto:reachjoby@gmail.com",
+          to: "/hire-me",
           label: "Hire Me",
           position: "right",
           className: "hire-me-button",
