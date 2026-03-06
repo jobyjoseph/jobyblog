@@ -9,6 +9,12 @@ import styles from "./index.module.css";
 const recentPosts = [
   {
     title:
+      "Google Social Login in Headless Shopify Using Better-Auth and Next.js",
+    to: "/blog/google-social-login-headless-shopify-better-auth",
+    date: "Mar 05, 2026",
+  },
+  {
+    title:
       "Implementing Forgot Password and Reset Password in Headless Shopify",
     to: "/blog/implementing-forgot-password-reset-password-headless-shopify",
     date: "Feb 28, 2026",
