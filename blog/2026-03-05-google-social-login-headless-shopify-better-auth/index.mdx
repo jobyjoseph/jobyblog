@@ -1,0 +1,715 @@
+---
+title: "Google Social Login in Headless Shopify Using Better-Auth and Next.js"
+date: 2026-03-05
+slug: google-social-login-headless-shopify-better-auth
+description: "Learn how to implement Google social login in your headless Shopify storefront using Better-Auth, Shopify Multipass, and Next.js. Complete guide with step-by-step implementation."
+tags: ["shopify", "authentication", "nextjs", "oauth", "web"]
+authors: jobyjoseph
+---
+
+Social login has become a standard feature in modern e-commerce applications, offering users a convenient way to sign in without creating new credentials. In this article, we'll explore how to implement **Google Social Login** in a headless Shopify storefront using **Better-Auth** and **Shopify Multipass**.
+
+**Note:** The live demo site uses a Shopify Partner development store which doesn't support Multipass (Multipass is only available on Shopify Plus plans). However, the complete working implementation of Google social login is available in the [GitHub repository](https://github.com/jobyjoseph/headless-shopify). You can refer to the codebase for a fully functional example.
+
+## What is Shopify Multipass?
+
+[Shopify Multipass](https://shopify.dev/docs/api/multipass) is a feature available on Shopify Plus that allows you to authenticate customers from an external identity provider. When a user signs in through a third-party service (like Google), you generate a Multipass token that Shopify uses to create or sign in the customer automatically.
+
+### How Multipass Works
+
+1. User authenticates with Google (or another OAuth provider)
+2. Your application receives the user's email from Google
+3. You generate a Multipass token using the user's email
+4. Exchange the Multipass token with Shopify for a customer access token
+5. Store the customer access token in a secure cookie for subsequent requests
+
+## Prerequisites
+
+Before implementing Google social login, ensure you have:
+
+1. **Better-Auth Setup**: Basic Better-Auth configuration in your Next.js application
+2. **Shopify Plus Account**: Multipass is only available on Shopify Plus plans
+3. **Multipass Enabled**: Enable Multipass in your Shopify admin settings and obtain the secret key
+4. **Google OAuth Credentials**: Google Cloud project with OAuth 2.0 credentials configured
+
+If you haven't set up basic Better-Auth authentication yet, check out the article on [implementing authentication in headless Shopify](/blog/implementing-authentication-headless-shopify-better-auth).
+
+## Step 1: Configure Environment Variables
+
+Add the required environment variables for Google OAuth and Shopify Multipass:
+
+```env
+# .env
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your_better_auth_secret
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Shopify Multipass
+SHOPIFY_MULTIPASS_SECRET=your_shopify_multipass_secret
+```
+
+### Getting Google OAuth Credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to **APIs & Services** > **Credentials**
+4. Click **Create Credentials** > **OAuth client ID**
+5. Configure the OAuth consent screen
+6. Set the application type to **Web application**
+7. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/callback/google` (for development)
+   - `https://yourdomain.com/api/auth/callback/google` (for production)
+
+### Getting Shopify Multipass Secret
+
+1. Log in to your Shopify admin
+2. Navigate to **Settings** > **Customer accounts**
+3. Enable **Multipass** (requires Shopify Plus)
+4. Copy the Multipass secret key
+
+## Step 2: Configure Better-Auth with Google Provider
+
+Update your Better-Auth configuration to include the Google social provider:
+
+```typescript
+// src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { nextCookies } from "better-auth/next-js";
+import { shopifyAuthPlugin } from "@/lib/shopify-auth-plugin";
+
+export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL,
+  plugins: [nextCookies(), shopifyAuthPlugin()],
+  // 👇 Google OAuth configuration
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  // 👆 Add your Google credentials here
+});
+```
+
+This configuration:
+
+- Enables the Google OAuth provider
+- Uses `nextCookies()` for cookie management in Next.js
+- Includes the custom `shopifyAuthPlugin` for Shopify-specific auth flows
+
+:::tip Important Configuration
+The `socialProviders.google` object is where you configure Google OAuth. Make sure to add your Google Client ID and Client Secret from the Google Cloud Console.
+:::
+
+## Step 3: Create the Multipass Token Generator
+
+Create a utility function to generate Multipass tokens:
+
+```typescript
+// src/lib/shopify/multipass.ts
+import Multipassify from "multipassify";
+
+export const SHOPIFY_MULTIPASS_SECRET = process.env.SHOPIFY_MULTIPASS_SECRET;
+
+export function generateMultipassToken(email: string): string {
+  if (!SHOPIFY_MULTIPASS_SECRET) {
+    throw new Error("SHOPIFY_MULTIPASS_SECRET is not configured.");
+  }
+
+  const multipassify = new Multipassify(SHOPIFY_MULTIPASS_SECRET);
+
+  return multipassify.encode({ email });
+}
+```
+
+Install the `multipassify` package:
+
+```bash
+pnpm add multipassify
+# or
+npm install multipassify
+```
+
+## Step 4: Create the Multipass Integration
+
+Create a GraphQL mutation to exchange the Multipass token for a Shopify customer access token:
+
+```graphql
+# src/integrations/shopify/customer-access-token-create-with-multipass/
+# customer-access-token-create-with-multipass.shopify.graphql
+
+mutation customerAccessTokenCreateWithMultipass($multipassToken: String!) {
+  customerAccessTokenCreateWithMultipass(multipassToken: $multipassToken) {
+    customerAccessToken {
+      accessToken
+      expiresAt
+    }
+    customerUserErrors {
+      message
+      field
+    }
+  }
+}
+```
+
+Create the integration function:
+
+```typescript
+// src/integrations/shopify/customer-access-token-create-with-multipass/index.ts
+import {
+  CustomerAccessTokenCreateWithMultipassDocument,
+  CustomerAccessTokenCreateWithMultipassMutation,
+  CustomerAccessTokenCreateWithMultipassMutationVariables,
+} from "@/generated/shopifySchemaTypes";
+import createApolloClient from "@/integrations/shopify/shopify-apollo-client";
+
+export const customerAccessTokenCreateWithMultipass = async (
+  multipassToken: string,
+): Promise<CustomerAccessTokenCreateWithMultipassMutation | undefined> => {
+  try {
+    const client = createApolloClient();
+    const { data } = await client.mutate<
+      CustomerAccessTokenCreateWithMultipassMutation,
+      CustomerAccessTokenCreateWithMultipassMutationVariables
+    >({
+      mutation: CustomerAccessTokenCreateWithMultipassDocument,
+      variables: { multipassToken },
+    });
+
+    if (!data) {
+      throw new Error(
+        "No data returned from customerAccessTokenCreateWithMultipass mutation",
+      );
+    }
+
+    return data;
+  } catch (error) {
+    console.error(
+      "Error creating customer access token with multipass:",
+      error,
+    );
+  }
+};
+```
+
+## Step 5: Create the Multipass API Endpoint
+
+Create a Next.js API route that handles the Multipass authentication flow:
+
+```typescript
+// src/app/api/shopify/multipass/route.ts
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { customerAccessTokenCreateWithMultipass } from "@/integrations/shopify/customer-access-token-create-with-multipass";
+import { generateMultipassToken } from "@/lib/shopify/multipass";
+
+const requestSchema = z.object({
+  email: z.string(),
+});
+
+export async function POST(request: Request) {
+  const parsed = requestSchema.safeParse(
+    await request.json().catch(() => ({})),
+  );
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
+  }
+
+  const { email } = parsed.data;
+
+  let multipassToken: string;
+
+  try {
+    multipassToken = generateMultipassToken(email);
+  } catch (error) {
+    console.error("Error generating multipass token:", error);
+    return NextResponse.json(
+      { error: "Multipass is not configured." },
+      { status: 500 },
+    );
+  }
+
+  try {
+    const result = await customerAccessTokenCreateWithMultipass(multipassToken);
+    const payload = result?.customerAccessTokenCreateWithMultipass;
+    const userErrors = payload?.customerUserErrors ?? [];
+    const token = payload?.customerAccessToken?.accessToken;
+    const expiresAt = payload?.customerAccessToken?.expiresAt;
+
+    if (userErrors.length || !token) {
+      return NextResponse.json(
+        { error: userErrors[0]?.message || "Unable to create access token." },
+        { status: 401 },
+      );
+    }
+
+    const response = NextResponse.json({ accessToken: token, expiresAt });
+
+    response.cookies.set("shopifyCustomerAccessToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      expires: expiresAt ? new Date(expiresAt) : undefined,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error creating access token with multipass:", error);
+    return NextResponse.json(
+      { error: "Unable to create access token." },
+      { status: 500 },
+    );
+  }
+}
+```
+
+This endpoint:
+
+1. Receives the user's email from the client
+2. Generates a Multipass token
+3. Exchanges it for a Shopify customer access token
+4. Stores the token in an HTTP-only cookie
+5. Returns the token and expiration to the client
+
+## Step 6: Create the Login Page with Google Sign-In
+
+Now create the login page that integrates Google OAuth:
+
+```typescript
+// src/app/account/login/page.tsx
+"use client";
+
+import React, { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import Cookies from "js-cookie";
+
+export default function LoginPage() {
+  const { data: session } = authClient.useSession();
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [processedSocialEmail, setProcessedSocialEmail] = useState<
+    string | null
+  >(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateCartBuyerIdentity = useCallback(async () => {
+    const cartId = Cookies.get("cart_id");
+    if (!cartId) {
+      return;
+    }
+
+    await fetch("/api/shopify/cart-buyer-identity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cartId }),
+    });
+  }, []);
+
+  useEffect(() => {
+    const socialEmail = session?.user?.email;
+
+    if (!socialEmail || socialEmail === processedSocialEmail) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function authenticateSocialUserWithMultipass() {
+      setGoogleLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/shopify/multipass", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: socialEmail }),
+        });
+
+        const payload = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to sign in with Google.");
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setProcessedSocialEmail(socialEmail);
+        await updateCartBuyerIdentity();
+        window.location.href = "/";
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
+        setError(
+          err instanceof Error ? err.message : "Unable to sign in with Google.",
+        );
+      } finally {
+        if (!cancelled) {
+          setGoogleLoading(false);
+        }
+      }
+    }
+
+    authenticateSocialUserWithMultipass();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [processedSocialEmail, session?.user?.email, updateCartBuyerIdentity]);
+
+  async function onGoogleSignIn() {
+    setError(null);
+    setGoogleLoading(true);
+
+    try {
+      const socialSignInResult = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/account/login",
+      });
+
+      const socialSignInError = (
+        socialSignInResult as { error?: { message?: string } }
+      )?.error?.message;
+
+      if (socialSignInError) {
+        setError(socialSignInError || "Unable to start Google sign in.");
+      }
+    } catch {
+      setError("Unable to start Google sign in.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)
+      .value;
+
+    try {
+      const shopifyAuth = await authClient.shopifySignIn({
+        email,
+        password,
+      });
+
+      const shopifyError = (shopifyAuth as { error?: { message?: string } })
+        ?.error?.message;
+      if (shopifyError) {
+        setError(shopifyError || "Invalid email or password.");
+        return;
+      }
+
+      const shopifyData = (shopifyAuth as { data?: { ok?: boolean } })?.data;
+      if (!shopifyData?.ok) {
+        setError("Invalid email or password.");
+        return;
+      }
+
+      await updateCartBuyerIdentity();
+
+      window.location.href = "/";
+    } catch {
+      setError("Unable to sign in. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="border-box px-5 py-8 lg:px-10 min-h-[60vh] flex items-center justify-center">
+      <div className="w-full max-w-md">
+        <h1 className="text-2xl font-semibold text-gray-900 text-center mb-8 ">
+          Login
+        </h1>
+        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className="text-gray-900">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              className="border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:border-gray-400"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="password" className="text-gray-900">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              className="border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:border-gray-400"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || googleLoading}
+            className="mt-4 bg-gray-900 text-white py-3 px-4 hover:bg-gray-800 transition-colors cursor-pointer uppercase disabled:opacity-60"
+          >
+            {loading ? "Signing In..." : "Sign In"}
+          </button>
+
+          <button
+            type="button"
+            onClick={onGoogleSignIn}
+            disabled={loading || googleLoading}
+            className="border border-gray-900 text-gray-900 py-3 px-4 hover:bg-gray-100 transition-colors cursor-pointer uppercase disabled:opacity-60"
+          >
+            {googleLoading
+              ? "Signing In With Google..."
+              : "Sign In with Google"}
+          </button>
+        </form>
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <Link
+            href="/account/forgot-password"
+            className="text-gray-600 hover:text-gray-900 font-light"
+          >
+            Forgot your password?
+          </Link>
+          <p className="text-gray-500 font-light">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/account/register"
+              className="text-gray-600 hover:text-gray-900 font-light"
+            >
+              Create one
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Key Implementation Details
+
+1. **Session Monitoring**: The `useEffect` hook watches for Better-Auth session changes after Google OAuth callback
+2. **Multipass Authentication**: When a Google email is detected, it triggers the Multipass flow
+3. **Cart Association**: After successful authentication, the cart is associated with the logged-in customer
+4. **Error Handling**: Comprehensive error handling for both OAuth and Multipass flows
+5. **Duplicate Prevention**: The `processedSocialEmail` state prevents duplicate Multipass calls
+
+## Step 7: Create a Session Provider (Optional)
+
+Create a session provider to manage user state across your application:
+
+```typescript
+// src/providers/session-provider.tsx
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { getCurrentUser } from "@/lib/shopify/getCurrentUser";
+
+type SessionUser = Awaited<ReturnType<typeof getCurrentUser>>;
+
+type SessionContextValue = {
+  user: SessionUser;
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+};
+
+const SessionContext = createContext<SessionContextValue | undefined>(
+  undefined,
+);
+
+export function SessionProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<SessionUser>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load user");
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return (
+    <SessionContext.Provider value={{ user, loading, error, refresh }}>
+      {children}
+    </SessionContext.Provider>
+  );
+}
+
+export function useSession() {
+  const context = useContext(SessionContext);
+  if (!context) {
+    throw new Error("useSession must be used within a SessionProvider");
+  }
+  return context;
+}
+```
+
+Create the `getCurrentUser` utility:
+
+```typescript
+// src/lib/shopify/getCurrentUser.ts
+export const getCurrentUser = async () => {
+  try {
+    const response = await fetch("/api/shopify/customer", {
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        return null;
+      }
+      return null;
+    }
+
+    const data = await response.json();
+    const customer = data?.customer ?? null;
+
+    if (!customer) {
+      return null;
+    }
+
+    const name = [customer.firstName, customer.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    return {
+      ...customer,
+      name: name || undefined,
+    };
+  } catch {
+    return null;
+  }
+};
+```
+
+## Understanding the Flow
+
+Let's break down what happens when a user clicks "Sign In with Google":
+
+### Step 1: OAuth Initiation
+
+```typescript
+authClient.signIn.social({
+  provider: "google",
+  callbackURL: "/account/login",
+});
+```
+
+- User is redirected to Google's OAuth consent screen
+- User grants permission
+- Google redirects back to `/account/login` with auth tokens
+
+### Step 2: Better-Auth Session Creation
+
+- Better-Auth processes the OAuth callback automatically
+- Creates a session with user information (email, name, etc.)
+- The `authClient.useSession()` hook detects the new session
+
+### Step 3: Multipass Token Generation
+
+```typescript
+const multipassToken = generateMultipassToken(email);
+```
+
+- Extract email from Better-Auth session
+- Generate encrypted Multipass token using Shopify secret
+
+### Step 4: Shopify Customer Access Token
+
+```typescript
+customerAccessTokenCreateWithMultipass(multipassToken);
+```
+
+- Send Multipass token to Shopify
+- Shopify validates and returns customer access token
+- If customer doesn't exist, Shopify creates one automatically
+
+### Step 5: Cookie Storage
+
+```typescript
+response.cookies.set("shopifyCustomerAccessToken", token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+});
+```
+
+- Store Shopify customer token in HTTP-only cookie
+- Token is automatically included in subsequent requests
+
+## Conclusion
+
+Implementing Google social login in a headless Shopify storefront requires coordinating several technologies:
+
+1. **Better-Auth**: Handles OAuth flow and session management
+2. **Shopify Multipass**: Bridges external authentication with Shopify customers
+3. **Next.js API Routes**: Orchestrates the authentication flow
+4. **Secure Cookies**: Stores authentication tokens safely
+
+This architecture provides a secure, user-friendly authentication experience while maintaining compatibility with Shopify's customer system. The approach can be extended to other OAuth providers (GitHub, Facebook, etc.) using the same Multipass integration pattern.
+
+## Additional Resources
+
+- [Better-Auth Documentation](https://www.better-auth.com/)
+- [Shopify Multipass Documentation](https://shopify.dev/docs/api/multipass)
+- [Google OAuth 2.0 Guide](https://developers.google.com/identity/protocols/oauth2)
+- [Next.js Authentication Patterns](https://nextjs.org/docs/authentication)
