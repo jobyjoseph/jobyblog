@@ -32,14 +32,35 @@ Copy the `.env.example` file to `.env` (create it if it doesn't exist):
 cp .env.example .env
 ```
 
-Then update the `.env` file with your Shopify credentials:
+Then update the `.env` file with your credentials:
 
 ```env
+# Shopify Configuration (Required)
 NEXT_PUBLIC_SHOPIFY_STOREFRONT_GRAPHQL_ENDPOINT=your_endpoint_here
 NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN=your_token_here
+
+# Authentication (Required)
+BETTER_AUTH_SECRET=your_generated_secret
+
+# Google Social Login (Optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Shopify Multipass (Optional - Shopify Plus only)
+SHOPIFY_MULTIPASS_SECRET=your_multipass_secret
 ```
 
-See the [Configuration](./configuration) page for more details on environment variables.
+#### Required Variables
+
+- **Shopify API credentials**: Get these from your Shopify admin
+- **BETTER_AUTH_SECRET**: Generate using `openssl rand -base64 32`
+
+#### Optional Variables
+
+- **Google OAuth credentials**: Only needed if you want Google social login
+- **Shopify Multipass secret**: Only needed for social login (requires Shopify Plus)
+
+See the [Configuration](./configuration) page for detailed instructions on obtaining each credential.
 
 ### 4. Run the Development Server
 

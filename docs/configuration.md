@@ -35,12 +35,70 @@ Your Shopify Storefront API access token.
 2. Navigate to API credentials
 3. Copy the Storefront API access token
 
+#### `BETTER_AUTH_SECRET`
+
+Secret key for Better-Auth authentication library.
+
+**How to generate:**
+
+```bash
+openssl rand -base64 32
+```
+
+This secret is used to sign and verify authentication tokens. Keep it secure and never commit it to version control.
+
+#### `SHOPIFY_MULTIPASS_SECRET`
+
+Shopify Multipass secret for social login integration (requires Shopify Plus).
+
+**How to get it:**
+
+1. Log in to your Shopify Admin
+2. Navigate to **Settings** → **Customer accounts**
+3. Enable **Multipass** (available only on Shopify Plus plans)
+4. Copy the Multipass secret key
+
+**Note:** Multipass is only available on Shopify Plus plans. If you're on a lower plan, social login integration won't be available.
+
+#### `GOOGLE_CLIENT_ID` (Optional)
+
+Google OAuth Client ID for Google social login.
+
+**How to get it:**
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth client ID**
+5. Configure the OAuth consent screen
+6. Set application type to **Web application**
+7. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/callback/google` (development)
+   - `https://yourdomain.com/api/auth/callback/google` (production)
+8. Copy the Client ID
+
+#### `GOOGLE_CLIENT_SECRET` (Optional)
+
+Google OAuth Client Secret that pairs with the Client ID.
+
+**Security:** Keep this secret secure and never commit it to version control.
+
 ### Example .env File
 
 ```env
 # Shopify Storefront API Configuration
 NEXT_PUBLIC_SHOPIFY_STOREFRONT_GRAPHQL_ENDPOINT=https://your-store.myshopify.com/api/2024-01/graphql.json
 NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN=your_access_token_here
+
+# Better-Auth Configuration
+BETTER_AUTH_SECRET=your_generated_secret_here
+
+# Shopify Multipass (Shopify Plus only)
+SHOPIFY_MULTIPASS_SECRET=your_multipass_secret_here
+
+# Google OAuth (Optional - for social login)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 ## Shopify Setup
@@ -96,20 +154,39 @@ Alternatively, you can create a custom app manually:
 4. Save your changes
 5. Go to **API credentials** and copy your access token
 
-## Next.js Configuration
-
-The project uses Next.js 16 with the App Router. Configuration is managed in `next.config.ts`.
-
-### Key Features Enabled
-
-- **Turbopack** for faster builds
-- **GraphQL file loading**
-- **TypeScript** support
-- **Tailwind CSS** integration
-
 ## Authentication Configuration
 
-The project uses **Better-Auth** for authentication. Configuration can be found in the authentication setup files.
+The project uses **Better-Auth** for authentication with a custom Shopify plugin.
+
+### Authentication Features
+
+- **Email/Password authentication** via Shopify Customer API
+- **Google Social Login** via OAuth 2.0 and Shopify Multipass
+- **Forgot password** and **Reset password** flows
+- **Customer account management**
+- **Secure cookie-based sessions**
+
+### Better-Auth Setup
+
+Better-Auth is configured in `src/lib/auth.ts` with:
+
+1. **Next.js cookies plugin** for secure session management
+2. **Custom Shopify plugin** that integrates with Shopify's Customer API
+3. **Social providers** (Google OAuth)
+
+### Google Social Login Setup
+
+To enable Google social login:
+
+1. Set up a Google Cloud project and OAuth credentials (see `GOOGLE_CLIENT_ID` above)
+2. Enable Multipass in your Shopify admin (Shopify Plus required)
+3. Add the required environment variables
+4. The integration automatically:
+   - Authenticates users via Google OAuth
+   - Creates/signs in Shopify customers via Multipass
+   - Stores access tokens in secure HTTP-only cookies
+
+**Note:** Google social login requires a Shopify Plus account for Multipass functionality.
 
 ## Important Notes
 

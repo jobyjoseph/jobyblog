@@ -19,7 +19,9 @@ This is a modern, production-ready boilerplate for building headless Shopify sto
 - Complete pages: Home, PLP, PDP, Search, Signup, Login, Cart, Account
 - Cart creation and line-item updates
 - GraphQL queries and mutations via `.graphql` files
-- **Better-Auth** authentication
+- **Better-Auth** authentication with custom Shopify plugin
+- **Google Social Login** with Shopify Multipass integration
+- **Complete authentication flows**: Sign up, Sign in, Forgot password, Reset password
 - **Zod** validation for type-safe data handling
 
 ## Tech Stack

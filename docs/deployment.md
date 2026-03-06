@@ -21,6 +21,10 @@ This project is optimized for deployment on [Vercel](https://vercel.com), the pl
      ```
      NEXT_PUBLIC_SHOPIFY_STOREFRONT_GRAPHQL_ENDPOINT
      NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN
+     BETTER_AUTH_SECRET
+     SHOPIFY_MULTIPASS_SECRET (if using social login)
+     GOOGLE_CLIENT_ID (if using Google login)
+     GOOGLE_CLIENT_SECRET (if using Google login)
      ```
    - Make sure to add them for all environments (Production, Preview, Development)
 
@@ -40,10 +44,27 @@ Once connected, Vercel will automatically deploy:
 
 Ensure all required environment variables are set in Vercel:
 
+**Required:**
+
 ```env
 NEXT_PUBLIC_SHOPIFY_STOREFRONT_GRAPHQL_ENDPOINT=your_endpoint
 NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN=your_token
+BETTER_AUTH_SECRET=your_auth_secret
 ```
+
+**Optional (for social login):**
+
+```env
+SHOPIFY_MULTIPASS_SECRET=your_multipass_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
+
+**Important:**
+
+- Generate a new `BETTER_AUTH_SECRET` for production using `openssl rand -base64 32`
+- Never use the same secrets in development and production
+- Update Google OAuth redirect URIs to include your production domain
 
 ## Production Checklist
 
@@ -51,7 +72,10 @@ Before deploying to production:
 
 - [ ] Test the production build locally (`pnpm build && pnpm start`)
 - [ ] Verify all environment variables are set
-- [ ] Test authentication flows
+- [ ] Generate production-specific `BETTER_AUTH_SECRET`
+- [ ] Update Google OAuth redirect URIs to production domain
+- [ ] Test authentication flows (sign up, sign in, forgot password)
+- [ ] Test Google social login (if enabled)
 - [ ] Verify cart functionality
 - [ ] Check mobile responsiveness
 - [ ] Test with real Shopify data
@@ -59,6 +83,7 @@ Before deploying to production:
 - [ ] Set up error monitoring (Sentry, etc.)
 - [ ] Configure analytics
 - [ ] Set up custom domain (optional)
+- [ ] Test all API routes under production URL
 
 ## Performance Optimization
 
@@ -95,8 +120,14 @@ Remember to:
 - Never commit `.env` files to version control
 - Use different tokens for development and production
 - Regularly rotate API tokens
+- Generate unique `BETTER_AUTH_SECRET` for each environment
+- Store authentication tokens in HTTP-only cookies
+- Keep Google OAuth secrets secure
+- Regularly update dependencies for security patches
 - Enable HTTPS (automatic on Vercel)
 - Set up proper CORS policies
+- Review and update OAuth redirect URIs
+- Monitor for suspicious authentication attempts
 
 ## Troubleshooting
 

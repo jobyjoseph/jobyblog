@@ -11,6 +11,13 @@ headless-shopify/
 │   ├── components/       # Shared UI components
 │   ├── integrations/     # Third-party integrations
 │   │   └── shopify/      # Shopify Storefront API
+│   ├── lib/              # Core library code
+│   │   ├── auth.ts       # Better-Auth configuration
+│   │   ├── auth-client.ts # Better-Auth client setup
+│   │   ├── shopify-auth-plugin.ts # Custom Shopify auth plugin
+│   │   └── shopify/      # Shopify utilities
+│   │       ├── multipass.ts # Multipass token generation
+│   │       └── getCurrentUser.ts # User data fetching
 │   ├── providers/        # App-wide providers
 │   └── utils/            # Utility functions
 ├── public/               # Static assets
@@ -38,8 +45,15 @@ Contains all routes, pages, and layouts using Next.js 16 App Router.
 - Product Detail Page (PDP)
 - Search
 - Cart
-- Account pages
-- Authentication pages
+- Account pages (profile, orders, addresses)
+- Authentication pages (login, register, forgot password, reset password)
+
+**API Routes:**
+
+- `/api/auth/*`: Better-Auth authentication endpoints
+- `/api/shopify/multipass`: Multipass token exchange for social login
+- `/api/shopify/customer`: Customer data endpoints
+- `/api/shopify/cart-buyer-identity`: Cart buyer identity updates
 
 ### `src/components`
 
@@ -72,6 +86,23 @@ All Shopify Storefront API related code.
 - Cart management
 - Product fetching
 - Customer authentication
+- Multipass integration for social login
+
+### `src/lib`
+
+Core library code for authentication and Shopify utilities.
+
+**Authentication files:**
+
+- **`auth.ts`**: Better-Auth server configuration with plugins and social providers
+- **`auth-client.ts`**: Better-Auth client setup for use in React components
+- **`shopify-auth-plugin.ts`**: Custom Better-Auth plugin that integrates with Shopify Customer API
+- **`shopify-auth-client.ts`**: Client-side plugin for Shopify authentication methods
+
+**Shopify utilities:**
+
+- **`shopify/multipass.ts`**: Generates Multipass tokens for social login
+- **`shopify/getCurrentUser.ts`**: Fetches current authenticated user data
 
 ### `src/providers`
 
@@ -79,10 +110,17 @@ Application-wide context providers and state management.
 
 **Examples:**
 
-- Authentication provider
-- Cart context
-- Theme provider
-- Any global state management
+- **Session provider**: Manages user authentication state
+- **Cart provider**: Global cart state and operations
+- **Theme provider**: Dark/light mode management
+- Any other global state management
+
+**Session Provider features:**
+
+- Monitors user authentication status
+- Provides user data across the app
+- Handles session refresh
+- Error handling for authentication failures
 
 ### `src/utils`
 
