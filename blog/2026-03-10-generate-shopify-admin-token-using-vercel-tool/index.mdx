@@ -1,0 +1,32 @@
+---
+title: "Generate a Shopify Admin Access Token Online"
+date: 2026-03-10
+slug: generate-shopify-admin-token-using-vercel-tool
+description: "Step-by-step guide to generate a Shopify Admin API access token for your app online."
+tags: [shopify, nextjs, web]
+authors: jobyjoseph
+---
+
+This post explains how you can quickly generate a Shopify admin token for your app.
+
+<!-- truncate -->
+
+## Step 1: Add Redirect URI
+
+Add `https://generate-shopify-admin-access-token.vercel.app` to the list of _Redirect URLs_.
+
+![Add Redirect URI in Shopify App Settings](./add-redirect-uri.png)
+
+## Step 2: Generate Token
+
+Visit [https://generate-shopify-admin-access-token.vercel.app/](https://generate-shopify-admin-access-token.vercel.app/).
+
+Enter your store domain, your app client id and your app secret.
+
+![Enter Shopify URL and App Credentials](./enter-app-details.png)
+
+Submit the details to get your access token.
+
+If you have already installed the app in your store, you will see the admin token immediately. If not, you will be first taken to the screen to install the app. Once you install the app, you will be automatically redirected to `https://generate-shopify-admin-access-token.vercel.app` and admin token will be displayed there.
+
+![Generated Shopify Admin Token Output](./admin-token-output.png)
