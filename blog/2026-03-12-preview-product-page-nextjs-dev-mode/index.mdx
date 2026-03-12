@@ -1,0 +1,263 @@
+---
+title: "Show Product Preview Page Using Next.js Draft Mode"
+date: 2026-03-12
+slug: show-product-preview-page-nextjs-draft-mode
+description: "Learn how to preview an unpublished Shopify product page in a headless storefront using Next.js Draft Mode in development."
+tags: [shopify]
+authors: jobyjoseph
+---
+
+In a headless Shopify storefront, you often need to preview a product page before publishing content changes. Next.js Draft Mode gives a clean way to do this in development.
+
+<!-- truncate -->
+
+This guide explains a practical flow using:
+
+1. A preview secret configuration with SHOPIFY_PREVIEW_SECRET
+2. A preview UI page at /preview
+3. An API route that validates secret and enables Draft Mode
+4. Admin API fetch for unpublished products in preview mode
+5. A disable endpoint to exit preview
+
+## Why Draft Mode for Preview
+
+Draft Mode lets Next.js bypass static caching rules and render fresh content for selected requests. This is ideal when you want to review a product page before public users can see changes.
+
+## Step 1: Add Preview Secret in Environment
+
+Add a shared secret in your environment file:
+
+```env
+SHOPIFY_PREVIEW_SECRET=your_preview_secret_here
+```
+
+Use a strong random value and keep it server-side only.
+
+## Step 2: Create a Preview Entry Page
+
+Create a page(eg: `/preview`) where you can submit secret + product handle. 
+
+```tsx
+// src/app/preview/page.tsx
+<form method="GET" action="/api/draft">
+  <input name="secret" type="password" required />
+  <input name="handle" type="text" placeholder="your-product-handle" />
+  <input name="path" type="text" placeholder="/products/your-product-handle" />
+  <button type="submit">Enable Preview</button>
+</form>
+```
+
+With this form:
+
+1. secret is used for verification
+2. handle is converted to /products/your-product-handle
+3. path can be used directly for any route preview
+
+## Step 3: Enable Draft Mode in API Route
+
+Create an API endpoint that validates the secret, enables Draft Mode, then redirects.
+
+```ts
+// src/app/api/draft/route.ts
+import { draftMode } from "next/headers";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const secret = url.searchParams.get("secret");
+  const configuredSecret = process.env.SHOPIFY_PREVIEW_SECRET;
+
+  if (!configuredSecret) {
+    return NextResponse.json(
+      { error: "Missing SHOPIFY_PREVIEW_SECRET." },
+      { status: 500 },
+    );
+  }
+
+  if (!secret || secret !== configuredSecret) {
+    return NextResponse.json({ error: "Invalid preview secret." }, { status: 401 });
+  }
+
+  const handle = url.searchParams.get("handle");
+  const path = url.searchParams.get("path");
+
+  const redirectPath = handle
+    ? `/products/${encodeURIComponent(handle)}`
+    : path && path.startsWith("/")
+      ? path
+      : null;
+
+  if (!redirectPath) {
+    return NextResponse.json(
+      { error: "Provide either a valid handle or path query param." },
+      { status: 400 },
+    );
+  }
+
+  const draft = await draftMode();
+  draft.enable();
+
+  return NextResponse.redirect(new URL(redirectPath, url.origin));
+}
+```
+
+## Step 4: Open a Product in Preview
+
+In development, open:
+
+```text
+http://localhost:3000/preview
+```
+
+Then:
+
+1. Enter the preview secret
+2. Enter product handle like my-test-product
+3. Submit
+
+You will be redirected to /products/my-test-product with Draft Mode enabled.
+
+## Step 4.1: Configure Shopify Admin API for Unpublished Product Preview
+
+Storefront API usually returns only published products. To preview an unpublished product, fetch product details from Shopify Admin API when Draft Mode is enabled.
+
+Add Admin API environment variables:
+
+```env
+SHOPIFY_ADMIN_GRAPHQL_ENDPOINT=https://your-store.myshopify.com/admin/api/2026-01/graphql.json
+SHOPIFY_ADMIN_ACCESS_TOKEN=your_admin_api_access_token
+```
+
+Create a server-only Admin GraphQL client:
+
+```ts
+// src/integrations/shopify-admin/shopify-admin-client.ts
+import "server-only";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+
+const createShopifyAdminClient = () => {
+  const graphqlEndpoint = process.env.SHOPIFY_ADMIN_GRAPHQL_ENDPOINT;
+  const accessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+
+  if (!graphqlEndpoint || !accessToken) {
+    throw new Error(
+      "Missing SHOPIFY_ADMIN_GRAPHQL_ENDPOINT or SHOPIFY_ADMIN_ACCESS_TOKEN.",
+    );
+  }
+
+  return new ApolloClient({
+    link: new HttpLink({
+      uri: graphqlEndpoint,
+      headers: {
+        "X-Shopify-Access-Token": accessToken,
+        "Content-Type": "application/json",
+      },
+      fetchOptions: {
+        cache: "no-store",
+      },
+    }),
+    cache: new InMemoryCache(),
+  });
+};
+```
+
+## Step 4.2: Admin GraphQL Query for Product by Handle
+
+Use an Admin GraphQL query that fetches product details by handle:
+
+```graphql
+# src/integrations/shopify-admin/get-product-by-handle/get-product-by-handle.admin.shopify.graphql
+query AdminProductByHandle($handle: String!) {
+  productByIdentifier(identifier: { handle: $handle }) {
+    title
+    description
+    tags
+    options {
+      name
+      values
+    }
+    images(first: 20) {
+      edges {
+        node {
+          url
+          altText
+        }
+      }
+    }
+    variants(first: 100) {
+      edges {
+        node {
+          id
+          title
+          price
+          inventoryQuantity
+          inventoryPolicy
+          selectedOptions {
+            name
+            value
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+This query works well for preview because it returns details needed by the product page UI, including options, images, variants, and tags.
+
+## Step 4.3: Switch Between Storefront API and Admin API
+
+In product page code, check Draft Mode and switch the data source:
+
+1. Draft Mode ON: fetch via Admin API (supports unpublished product preview)
+2. Draft Mode OFF: fetch via Storefront API (public storefront behavior)
+
+```ts
+import { draftMode } from "next/headers";
+import { getProduct } from "@/integrations/shopify/product";
+import { getAdminProductByHandle } from "@/integrations/shopify-admin/get-product-by-handle";
+
+const isDraftMode = (await draftMode()).isEnabled;
+
+if (isDraftMode) {
+  const adminProduct = await getAdminProductByHandle(handle);
+  // render preview from adminProduct
+} else {
+  const storefrontProduct = await getProduct({ handle });
+  // render public product from storefrontProduct
+}
+```
+
+This switch is the key part of previewing unpublished products safely in dev mode.
+
+## Step 5: Disable Preview Mode
+
+Add a route to disable Draft Mode and redirect back.
+
+```ts
+// src/app/api/draft/disable/route.ts
+import { draftMode } from "next/headers";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const path = url.searchParams.get("path") || "/";
+
+  if (!path.startsWith("/")) {
+    return NextResponse.json({ error: "Invalid path." }, { status: 400 });
+  }
+
+  const draft = await draftMode();
+  draft.disable();
+
+  return NextResponse.redirect(new URL(path, url.origin));
+}
+```
+
+Example usage:
+
+```text
+http://localhost:3000/api/draft/disable?path=/products/my-test-product
+```
+
+The logic for preview mode is added to the [headless Shopify](https://github.com/jobyjoseph/headless-shopify) project.

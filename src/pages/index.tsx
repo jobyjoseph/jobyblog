@@ -8,6 +8,16 @@ import styles from "./index.module.css";
 
 const recentPosts = [
   {
+    title: "Show Product Preview Page Using Next.js Draft Mode",
+    to: "/blog/show-product-preview-page-nextjs-draft-mode",
+    date: "Mar 12, 2026",
+  },
+  {
+    title: "Generate Shopify Admin Access Token Online",
+    to: "/blog/generate-shopify-admin-token-online",
+    date: "Mar 10, 2026",
+  },
+  {
     title:
       "Google Social Login in Headless Shopify Using Better-Auth and Next.js",
     to: "/blog/google-social-login-headless-shopify-better-auth",
